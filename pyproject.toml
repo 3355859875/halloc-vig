@@ -1,0 +1,30 @@
+[project]
+name = "halloc-vig"
+version = "0.1.0"
+description = "多模态数据挖掘课程项目：用视觉信息增益免训练定位图文描述里的幻觉词（HalLoc）"
+requires-python = ">=3.11"
+dependencies = [
+    "torch==2.11.0",
+    "torchvision==0.26.0",  # 新版 transformers 的 Qwen-VL 处理器依赖它
+    "transformers>=4.57",
+    "accelerate>=1.0",
+    "pillow>=10",
+    "numpy>=1.26",
+    "scikit-learn>=1.4",
+    "pandas>=2.0",
+    "matplotlib>=3.8",
+    "certifi",
+    # 演示网页
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+    "python-multipart>=0.0.9",
+]
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cu128", marker = "sys_platform == 'linux'" }]
+torchvision = [{ index = "pytorch-cu128", marker = "sys_platform == 'linux'" }]
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true

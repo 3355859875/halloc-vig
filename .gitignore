@@ -1,0 +1,17 @@
+# 数据、结果、日志、模型都不进仓库（体积大，可按 README 重新下载或生成）
+data/
+results/
+logs/
+models/
+*.safetensors
+*.bin
+*.pt
+
+# 环境与缓存
+.venv/
+.uv-cache/
+.uv_cache/
+__pycache__/
+*.pyc
+.DS_Store
+.env

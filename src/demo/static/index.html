@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>图文幻觉词高亮器</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="masthead">
+    <div class="wrap">
+      <p class="kicker">多模态数据挖掘 · 课程项目演示</p>
+      <h1>图文描述幻觉词高亮器</h1>
+      <p class="lede">让同一个多模态大模型分别“看着原图”和“看着几张无关的图”读同一段描述。
+        一个词如果在原图下反而<em>更不可能</em>出现，就说明原图不支持它——它可能是幻觉。</p>
+      <div class="principle">
+        <div class="step"><span class="num">1</span>原图 + 描述 → 逐词 log p</div>
+        <div class="step"><span class="num">2</span>换成 <b id="k-num">4</b> 张随机无关图 → 平均 log p</div>
+        <div class="step"><span class="num">3</span>VIG = 无关图平均 − 原图，越高越可疑</div>
+        <div class="step"><span class="num">4</span>VIG ≥ <b id="thr">—</b>（验证集上定的阈值）→ 红框</div>
+      </div>
+      <p class="meta" id="meta">载入中…</p>
+    </div>
+  </header>
+
+  <nav class="tabs wrap" role="tablist">
+    <button class="tab active" data-tab="browse" role="tab">示例浏览</button>
+    <button class="tab" data-tab="live" role="tab">在线检测</button>
+  </nav>
+
+  <main class="wrap">
+    <!-- 示例浏览 -->
+    <section id="tab-browse" class="panel active">
+      <div class="toolbar">
+        <label>筛选
+          <select id="filter">
+            <option value="hit">抓到了幻觉的</option>
+            <option value="halluc">含幻觉的</option>
+            <option value="clean">无幻觉的（看误报）</option>
+            <option value="all">全部</option>
+          </select>
+        </label>
+        <label class="grow">样本
+          <select id="example-select"></select>
+        </label>
+        <div class="btns">
+          <button id="prev" class="ghost">上一条</button>
+          <button id="next" class="ghost">下一条</button>
+          <button id="rand">随机一条</button>
+        </div>
+      </div>
+
+      <div class="grid">
+        <figure class="card image-card">
+          <img id="ex-image" alt="原图">
+          <figcaption id="ex-caption"></figcaption>
+        </figure>
+        <div class="card text-card">
+          <div class="chips" id="ex-chips"></div>
+          <div class="annotated" id="ex-text"></div>
+          <div class="legend" id="ex-legend"></div>
+        </div>
+      </div>
+
+      <div class="grid lower">
+        <div class="card" id="ex-detail-card">
+          <h3>点一个词看解释</h3>
+          <div class="detail" id="ex-detail"><p class="hint">点上面描述里任意一个词。</p></div>
+        </div>
+        <div class="card">
+          <h3>最可疑的词</h3>
+          <table class="top" id="ex-top"></table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>这条样本用作对照的 4 张随机无关图</h3>
+        <div class="strip" id="ex-others"></div>
+        <button id="to-live" class="ghost wide">把这条的图和描述带到“在线检测”，自己改文字试试 →</button>
+      </div>
+    </section>
+
+    <!-- 在线检测 -->
+    <section id="tab-live" class="panel">
+      <div class="grid">
+        <div class="card">
+          <div class="drop" id="drop">
+            <img id="live-preview" alt="" hidden>
+            <p id="drop-hint">把图片拖到这里，或 <label class="link">选择文件<input type="file" id="file" accept="image/*" hidden></label></p>
+          </div>
+          <p class="small" id="live-source"></p>
+        </div>
+        <div class="card">
+          <label class="block">英文描述（可以手写，也可以让模型写）
+            <textarea id="live-text" rows="8" placeholder="A man is standing on a tennis court holding a racket..."></textarea>
+          </label>
+          <div class="btns">
+            <button id="btn-caption" class="ghost">让模型写描述</button>
+            <button id="btn-detect">检测</button>
+          </div>
+          <p class="status" id="live-status"></p>
+          <label id="preset-wrap" hidden>演示预设（之前跑好的结果，不用等模型）
+            <select id="preset"></select>
+          </label>
+        </div>
+      </div>
+
+      <div id="live-result" hidden>
+        <div class="card">
+          <div class="chips" id="live-chips"></div>
+          <div class="annotated" id="live-text-out"></div>
+          <div class="legend" id="live-legend"></div>
+        </div>
+        <div class="grid lower">
+          <div class="card">
+            <h3>点一个词看解释</h3>
+            <div class="detail" id="live-detail"><p class="hint">点上面描述里任意一个词。</p></div>
+          </div>
+          <div class="card">
+            <h3>最可疑的词</h3>
+            <table class="top" id="live-top"></table>
+          </div>
+        </div>
+        <div class="card">
+          <h3>用作对照的 4 张随机无关图</h3>
+          <div class="strip" id="live-others"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="wrap foot">
+    模型：Qwen2.5-VL-3B-Instruct（不训练）· 数据：HalLoc（CVPR 2025）+ Visual Genome 图片 · 颜色 = 该词 VIG 在验证集全部实词中的分位数
+  </footer>
+  <div class="tip" id="tip" hidden></div>
+  <script src="/static/app.js"></script>
+</body>
+</html>
